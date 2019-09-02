@@ -1,0 +1,44 @@
+version: '3.7'
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    hostname: sf-test-nginx
+    container_name: sf-test-nginx
+    depends_on:
+      - php
+    volumes:
+      - ./nginx-general-conf:/etc/nginx/
+      - ./sites:/var/www
+      - ./logs:/var/log/nginx
+    tty: true
+    command: nginx -g "daemon off;"
+  php:
+    build: ./images/php
+    volumes:
+      - ./sites:/var/www
+    depends_on:
+      - mysql
+    ports:
+      - "9000"
+    expose:
+      - "9000"
+    hostname: sf-test-php
+    container_name: sf-test-php
+  mysql:
+    image: mysql:8
+    volumes:
+      - sf-test-mysql-data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d/
+    hostname: sf-test-mysql
+    container_name: sf-test-mysql
+    ports:
+      - "33066:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=pass
+      - MYSQL_DATABASE=sf-test
+volumes:
+  sf-test-mysql-data:
+
+
