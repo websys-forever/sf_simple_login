@@ -35,6 +35,11 @@ class User implements UserInterface
      */
     private $password;
 
+    /**
+     * @ORM\OneToOne(targetEntity="App\Entity\Article", mappedBy="author", cascade={"persist", "remove"})
+     */
+    private $article;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -111,5 +116,22 @@ class User implements UserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    public function getArticle(): ?Article
+    {
+        return $this->article;
+    }
+
+    public function setArticle(Article $article): self
+    {
+        $this->article = $article;
+
+        // set the owning side of the relation if necessary
+        if ($this !== $article->getAuthor()) {
+            $article->setAuthor($this);
+        }
+
+        return $this;
     }
 }
