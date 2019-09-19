@@ -1,0 +1,128 @@
+<?php
+
+namespace App\Controller;
+
+use App\Form\EditArticleUserFormType;
+use App\Repository\Article\ArticleRepository;
+use App\Repository\DataTransferObject\SessionArticleCollection;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Routing\Annotation\Route;
+
+class ArticleProfileController extends AbstractController
+{
+    /**
+     * @Route("/my", name="author_articles")
+     */
+    public function authorArticles(
+        Request $request,
+        ArticleRepository $articleRepository
+    )
+    {
+        $page = $request->get('page') ?: 1 ;
+        $limit = $request->get('limit') ?: 2 ;
+
+        if ($this->isGranted('ROLE_USER')) {
+            /** @var \App\Entity\User $user */
+            $userId = $this->getUser()->getId();
+            $articles = $articleRepository->getUserArticles($userId, $page, $limit);
+            $maxPages = ceil($articles->count() / $limit);
+            $articles = $articles->getIterator()->getArrayCopy();
+            //dd($articles);
+        } else {
+            /** @var SessionArticleCollection $sessionArticle */
+            $sessionArticle = $articleRepository->getAnonymArticles($session, $page, $limit);
+            $maxPages = $sessionArticle->maxPages($limit);
+            $articles = $sessionArticle->currentPageArticles($page, $limit);
+
+        }
+
+        return $this->render('author_articles/index.html.twig', [
+            'thisPage' => $page,
+            'limit' => $limit,
+            'maxPages' => ceil(count($articles) / $limit),
+            'articles' => $articles,
+        ]);
+    }
+
+    /**
+     * @Route("/my/article/remove/{id}", name="remove_article")
+     */
+    public function removeArticle
+    (
+        Request $request,
+        ArticleRepository $articleRepository,
+        EntityManagerInterface $entityManager
+    )
+    {
+        if (!$this->isGranted('ROLE_USER')) {
+
+            $this->addFlash('error', 'Register or login for manage your articles.');
+
+            return $this->redirectToRoute('app_register');
+        }
+
+        $article = $articleRepository->findOneBy(['id' => $request->get('id')]);
+        $userId = $this->getUser()->getId();
+
+        if ($article->getAuthor()->getId() !== $userId) {
+            $this->addFlash('error', 'Access denied');
+
+            return $this->redirectToRoute('app_register');
+        }
+
+        $entityManager->remove($article);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Article removed');
+
+        return $this->redirectToRoute('author_articles');
+    }
+
+    /**
+     * @Route("/my/article/edit/{id}", name="edit_article")
+     */
+    public function editArticle
+    (
+        Request $request,
+        ArticleRepository $articleRepository,
+        EntityManagerInterface $entityManager
+    )
+    {
+        if (!$this->isGranted('ROLE_USER')) {
+
+            $this->addFlash('error', 'Register or login for manage your articles.');
+
+            return $this->redirectToRoute('app_register');
+        }
+
+        $article = $articleRepository->findOneBy(['id' => $request->get('id')]);
+        $userId = $this->getUser()->getId();
+
+        if ($article->getAuthor()->getId() !== $userId) {
+            $this->addFlash('error', 'Access denied');
+
+            return $this->redirectToRoute('app_register');
+        }
+
+        $form = $this->createForm(EditArticleUserFormType::class, $article);
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $article->setTitle($form['title']->getData());
+            $article->setContent($form['content']->getData());
+            $entityManager->persist($article);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Your amazing article edited!');
+
+            return $this->redirectToRoute('author_articles');
+        }
+
+        return $this->render('author_articles/edit.html.twig', [
+            'articleForm' => $form->createView(),
+        ]);
+    }
+}

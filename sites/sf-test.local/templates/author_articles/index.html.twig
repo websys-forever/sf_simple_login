@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ArticleProfileController!{% endblock %}
+
+{% block body %}
+<style>
+    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+</style>
+    <nav class="navbar navbar-dark bg-dark">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item bg-dark active">
+                <a class="nav-link " href="{{ path('home_page') }}">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('new_article') }}">Add an article</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/logout">Logout</a>
+            </li>
+        </ul>
+
+    </nav>
+    {% if articles|length > 0 %}
+        <div class="table-responsive">
+            {% if (app.user is empty) %}
+                <p><a href="{{ path('app_register') }}">Register</a> or <a href="{{ path('app_login') }}">login</a> for manage your articles</p>
+            {% endif %}
+
+            <table class="table table-striped table-sm">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Published</th>
+                    {% if (app.user is not empty) %}
+                    <th>Manage</th>
+                    {% endif %}
+
+                </tr>
+                </thead>
+                <tbody>
+                {% set i = 0 %}
+                {% for article in articles %}
+                    {% set i = i + 1 %}
+                    <tr>
+                        <td>{{ i }}</td>
+                        <td>{{ article.title }}</td>
+                        <td>{{ article.createdAt|date('d-m-Y') }}</td>
+                        {% if (app.user is not empty) %}
+                        <td>
+                            <a href="{{ path('remove_article', {id: article.id}) }}" class="text-danger">Remove</a>
+                            <a href="{{ path('edit_article', {id: article.id}) }}" class="text-primary">Edit</a>
+                        </td>
+                        {% endif %}
+
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{#<div class="example-wrapper">
+    {% if articles|length > 0 %}
+    <ul id="items">
+        {% for article in articles %}
+            <li>
+                <a href="{{ path('show_article',{'id': article.id}) }}">
+                    {{ article.title }}</a>
+                Author: {{ article.author.getAuthorName(article) }}
+            </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+#}
+
+<div class="example-wrapper">
+    {% include('common/_pagination.html.twig') %}
+</div>
+{% endblock %}

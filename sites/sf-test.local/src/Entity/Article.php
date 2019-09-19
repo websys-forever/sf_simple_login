@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ArticleRepository")
@@ -18,16 +19,19 @@ class Article
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank()
      */
     private $title;
 
     /**
-     * @ORM\Column(type="string", length=300)
+     * @ORM\Column(type="text")
+     * @Assert\NotBlank()
+     * @Assert\Length(max="300")
      */
     private $content;
 
     /**
-     * @ORM\OneToOne(targetEntity="App\Entity\User", inversedBy="article", cascade={"persist", "remove"})
+     * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="articles", cascade={"persist"})
      * @ORM\JoinColumn(nullable=false)
      */
     private $author;
@@ -41,6 +45,14 @@ class Article
      * @ORM\Column(type="datetime")
      */
     private $updated_at;
+
+    public function __construct()
+    {
+        if ($this->getCreatedAt() === null) {
+            $this->setCreatedAt(new \DateTime());
+        }
+        $this->setUpdatedAt(new \DateTime());
+    }
 
     public function getId(): ?int
     {

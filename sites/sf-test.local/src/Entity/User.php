@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -36,9 +38,33 @@ class User implements UserInterface
     private $password;
 
     /**
-     * @ORM\OneToOne(targetEntity="App\Entity\Article", mappedBy="author", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity="App\Entity\Article", mappedBy="author", cascade={"persist"}, orphanRemoval=true)
      */
-    private $article;
+    private $articles;
+
+    /**
+     * @ORM\Column(type="string", length=200, nullable=true)
+     */
+    private $author_name;
+
+    /**
+     * @ORM\Column(type="datetime")
+     */
+    private $created_at;
+
+    /**
+     * @ORM\Column(type="datetime")
+     */
+    private $updated_at;
+
+    public function __construct()
+    {
+        if ($this->getCreatedAt() === null) {
+            $this->setCreatedAt(new \DateTime());
+        }
+        $this->setUpdatedAt(new \DateTime());
+        $this->articles = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -118,20 +144,90 @@ class User implements UserInterface
         // $this->plainPassword = null;
     }
 
-    public function getArticle(): ?Article
+    /**
+     * @return Collection|Article[]
+     */
+    public function getArticles(): Collection
     {
-        return $this->article;
+        return $this->articles;
     }
 
     public function setArticle(Article $article): self
     {
-        $this->article = $article;
-
-        // set the owning side of the relation if necessary
-        if ($this !== $article->getAuthor()) {
+        if (!$this->articles->contains($article)) {
+            $this->articles[] = $article;
             $article->setAuthor($this);
         }
 
         return $this;
     }
+
+    public function addArticle(Article $article): self
+    {
+        if (!$this->articles->contains($article)) {
+            $this->articles[] = $article;
+            $article->setAuthor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeArticle(Article $article): self
+    {
+        if ($this->articles->contains($article)) {
+            $this->articles->removeElement($article);
+            if ($article->getAuthor() === $this) {
+                $article->setAuthor(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getAuthorName(Article $article): ?string
+    {
+        return $this->author_name;
+    }
+
+    public function getExistAuthorName(): ?string
+    {
+        return $this->author_name;
+    }
+
+    public function setAuthorName(string $author_name): self
+    {
+        $this->author_name = $author_name;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeInterface
+    {
+        return $this->created_at;
+    }
+
+    public function setCreatedAt(\DateTimeInterface $created_at): self
+    {
+        $this->created_at = $created_at;
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updated_at;
+    }
+
+    public function setUpdatedAt(\DateTimeInterface $updated_at): self
+    {
+        $this->updated_at = $updated_at;
+
+        return $this;
+    }
+
+    public function __toString()
+    {
+        return (string) $this->id;
+    }
+
 }

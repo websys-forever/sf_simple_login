@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New article{% endblock %}
+
+{% block body %}
+    {{ form_start(articleForm) }}
+        {{ form_widget(articleForm) }}
+    {{ form_end(articleForm) }}
+{% endblock %}
