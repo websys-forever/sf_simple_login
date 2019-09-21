@@ -2,7 +2,7 @@
 
 namespace App\Repository\DataTransferObject;
 
-class SessionArticle
+class SessionUser
 {
     private $title;
     private $content;

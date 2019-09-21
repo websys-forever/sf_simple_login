@@ -12,7 +12,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
  * @UniqueEntity(fields={"email"}, message="There is already an account with this email")
  */
-class User implements UserInterface
+class AnonymUser
 {
     /**
      * @ORM\Id()
@@ -22,23 +22,12 @@ class User implements UserInterface
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=180, unique=true)
+     * @ORM\Column(type="string", length=128)
      */
-    private $email;
+    private $session_id;
 
     /**
-     * @ORM\Column(type="json")
-     */
-    private $roles = [];
-
-    /**
-     * @var string The hashed password
-     * @ORM\Column(type="string")
-     */
-    private $password;
-
-    /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Article", mappedBy="author", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Entity\SessionArticle", mappedBy="author", cascade={"persist"}, orphanRemoval=true)
      */
     private $articles;
 
@@ -71,88 +60,27 @@ class User implements UserInterface
         return $this->id;
     }
 
-    public function getEmail(): ?string
+    public function getSessionId(): ?string
     {
-        return $this->email;
+        return $this->session_id;
     }
 
-    public function setEmail(string $email): self
+    public function setSessionId(string $sessionId): self
     {
-        $this->email = $email;
+        $this->session_id = $sessionId;
 
         return $this;
     }
 
     /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
-    public function getUsername(): string
-    {
-        return (string) $this->email;
-    }
-
-    /**
-     * @see UserInterface
-     */
-    public function getRoles(): array
-    {
-        $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
-
-        return array_unique($roles);
-    }
-
-    public function setRoles(array $roles): self
-    {
-        $this->roles = $roles;
-
-        return $this;
-    }
-
-    /**
-     * @see UserInterface
-     */
-    public function getPassword(): string
-    {
-        return (string) $this->password;
-    }
-
-    public function setPassword(string $password): self
-    {
-        $this->password = $password;
-
-        return $this;
-    }
-
-    /**
-     * @see UserInterface
-     */
-    public function getSalt()
-    {
-        // not needed when using the "bcrypt" algorithm in security.yaml
-    }
-
-    /**
-     * @see UserInterface
-     */
-    public function eraseCredentials()
-    {
-        // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
-    }
-
-    /**
-     * @return Collection|Article[]
+     * @return Collection|SessionArticle[]
      */
     public function getArticles(): Collection
     {
         return $this->articles;
     }
 
-    public function setArticle(Article $article): self
+    public function setArticle(SessionArticle $article): self
     {
         if (!$this->articles->contains($article)) {
             $this->articles[] = $article;
@@ -162,7 +90,7 @@ class User implements UserInterface
         return $this;
     }
 
-    public function addArticle(Article $article): self
+    public function addArticle(SessionArticle $article): self
     {
         if (!$this->articles->contains($article)) {
             $this->articles[] = $article;
@@ -172,7 +100,7 @@ class User implements UserInterface
         return $this;
     }
 
-    public function removeArticle(Article $article): self
+    public function removeArticle(SessionArticle $article): self
     {
         if ($this->articles->contains($article)) {
             $this->articles->removeElement($article);
@@ -184,7 +112,7 @@ class User implements UserInterface
         return $this;
     }
 
-    public function getAuthorName(Article $article): ?string
+    public function getAuthorName(SessionArticle $article): ?string
     {
         return $this->author_name;
     }

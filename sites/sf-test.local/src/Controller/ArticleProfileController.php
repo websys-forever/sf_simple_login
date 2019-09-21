@@ -4,11 +4,10 @@ namespace App\Controller;
 
 use App\Form\EditArticleUserFormType;
 use App\Repository\Article\ArticleRepository;
-use App\Repository\DataTransferObject\SessionArticleCollection;
+use App\Repository\Article\SessionArticleRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 class ArticleProfileController extends AbstractController
@@ -18,40 +17,31 @@ class ArticleProfileController extends AbstractController
      */
     public function authorArticles(
         Request $request,
-        ArticleRepository $articleRepository
+        ArticleRepository $articleRepository,
+        SessionArticleRepository $sessionArticleRepository
     )
     {
         $page = $request->get('page') ?: 1 ;
         $limit = $request->get('limit') ?: 2 ;
 
         if ($this->isGranted('ROLE_USER')) {
-            /** @var \App\Entity\User $user */
-            $userId = $this->getUser()->getId();
-            $articles = $articleRepository->getUserArticles($userId, $page, $limit);
-            $maxPages = ceil($articles->count() / $limit);
-            $articles = $articles->getIterator()->getArrayCopy();
-            //dd($articles);
+            $articles = $articleRepository->getUserArticles($page, $limit);
         } else {
-            /** @var SessionArticleCollection $sessionArticle */
-            $sessionArticle = $articleRepository->getAnonymArticles($session, $page, $limit);
-            $maxPages = $sessionArticle->maxPages($limit);
-            $articles = $sessionArticle->currentPageArticles($page, $limit);
-
+            $articles = $sessionArticleRepository->getAnonymArticles($page, $limit);
         }
 
         return $this->render('author_articles/index.html.twig', [
             'thisPage' => $page,
             'limit' => $limit,
-            'maxPages' => ceil(count($articles) / $limit),
-            'articles' => $articles,
+            'maxPages' => ceil($articles->count() / $limit),
+            'articles' => $articles->getIterator()->getArrayCopy(),
         ]);
     }
 
     /**
      * @Route("/my/article/remove/{id}", name="remove_article")
      */
-    public function removeArticle
-    (
+    public function removeArticle(
         Request $request,
         ArticleRepository $articleRepository,
         EntityManagerInterface $entityManager
@@ -84,8 +74,7 @@ class ArticleProfileController extends AbstractController
     /**
      * @Route("/my/article/edit/{id}", name="edit_article")
      */
-    public function editArticle
-    (
+    public function editArticle(
         Request $request,
         ArticleRepository $articleRepository,
         EntityManagerInterface $entityManager

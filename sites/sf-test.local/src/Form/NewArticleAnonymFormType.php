@@ -2,7 +2,9 @@
 
 namespace App\Form;
 
+use App\Entity\AnonymUser;
 use App\Entity\Article;
+use App\Repository\User\AnonymUserRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -20,26 +22,32 @@ class NewArticleAnonymFormType extends AbstractType
      */
     private $session;
 
-    public function __construct(SessionInterface $session)
+    /**
+     * @var AnonymUserRepository
+     */
+    private $anonymUserRepository;
+
+    public function __construct(
+        SessionInterface $session,
+        AnonymUserRepository $anonymUserRepository
+    )
     {
         $this->session = $session;
+        $this->anonymUserRepository = $anonymUserRepository;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
 
+        $sessionId = $this->session->getId();
         //dd($sessionId);
-
-        /*if ($authorName = $user->getExistAuthorName()) {
-        } else {
-
-        }*/
-        //dd($authorName);
+        /** @var AnonymUser $anonymUser */
+        $anonymUser = $this->anonymUserRepository->findBy(['session_id' => $sessionId]);
 
         $builder
             ->add('title');
 
-        if (!$this->session->get('author_name')) {
+        if (empty($anonymUser) || !$anonymUser->getExistAuthorName()) {
             $builder->add('author_name', TextType::class, [
                 //'class' => User::class,
                 //'choice_label' => 'email',

@@ -2,7 +2,7 @@
 
 namespace App\Repository\DataTransferObject;
 
-class SessionArticle
+class SessionArticleItem
 {
     private $title;
     private $content;
@@ -14,7 +14,7 @@ class SessionArticle
         $this->title = $article['title'];
         $this->content = $article['content'];
         $this->author = $article['content'];
-        $this->articles = $articles;
+        $this->articles = $article;
     }
 
     public function count()
