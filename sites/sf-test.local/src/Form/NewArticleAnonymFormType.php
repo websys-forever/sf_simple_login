@@ -40,17 +40,14 @@ class NewArticleAnonymFormType extends AbstractType
     {
 
         $sessionId = $this->session->getId();
-        //dd($sessionId);
         /** @var AnonymUser $anonymUser */
-        $anonymUser = $this->anonymUserRepository->findBy(['session_id' => $sessionId]);
+        $anonymUser = $this->anonymUserRepository->findOneBy(['session_id' => $sessionId]);
 
         $builder
             ->add('title');
 
         if (empty($anonymUser) || !$anonymUser->getExistAuthorName()) {
             $builder->add('author_name', TextType::class, [
-                //'class' => User::class,
-                //'choice_label' => 'email',
                 'mapped' => false,
                 'constraints' => [
                     new NotBlank(),

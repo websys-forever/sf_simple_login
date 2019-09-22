@@ -19,14 +19,17 @@ class HomePageController extends AbstractController
         ArticleRepository $articleRepository
     )
     {
-        $page = $request->get('page') ?: 1 ;
-        $limit = $request->get('limit') ?: 2 ;
+        $page = (int) ($request->get('page') ?: 1 );
+        $limit = (int) ($request->get('limit') ?: 2 );
 
-        $articles = $articleRepository->getAllAuthorsArticles($page, $limit);
+        $result = $articleRepository->getAllAuthorsArticles($page, $limit);
 //dd(compact('articles'));
-        return $this->render('home_page/index.html.twig',
-            ['articles' => $articles]
-            //compact('articles')
+        return $this->render('home_page/index.html.twig', [
+            'thisPage' => $result->getThisPage(),
+            'limit' => $limit,
+            'maxPages' => $result->getMaxPages(),
+            'articles' => $result->getElements(),
+            ]
         );
     }
 }

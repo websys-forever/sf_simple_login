@@ -25,16 +25,16 @@ class ArticleProfileController extends AbstractController
         $limit = $request->get('limit') ?: 2 ;
 
         if ($this->isGranted('ROLE_USER')) {
-            $articles = $articleRepository->getUserArticles($page, $limit);
+            $result = $articleRepository->getUserArticles($page, $limit);
         } else {
-            $articles = $sessionArticleRepository->getAnonymArticles($page, $limit);
+            $result = $sessionArticleRepository->getAnonymArticles($page, $limit);
         }
 
         return $this->render('author_articles/index.html.twig', [
-            'thisPage' => $page,
+            'thisPage' => $result->getThisPage(),
             'limit' => $limit,
-            'maxPages' => ceil($articles->count() / $limit),
-            'articles' => $articles->getIterator()->getArrayCopy(),
+            'maxPages' => $result->getMaxPages(),
+            'articles' => $result->getElements(),
         ]);
     }
 

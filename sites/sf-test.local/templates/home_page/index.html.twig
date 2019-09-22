@@ -12,10 +12,11 @@
         {% if articles|length > 0 %}
             <ul id="items">
                 {% for article in articles %}
+                    {{ dump(article) }}
                     <li>
                         <a href="{{ path('show_article',{'id': article.id}) }}">
                             {{ article.title }}</a>
-                        Author: {{ article.author.getAuthorName(article) }}
+                        Author: {{ article.author.author_name }}
                     </li>
                 {% endfor %}
             </ul>

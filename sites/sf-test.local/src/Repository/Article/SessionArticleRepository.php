@@ -4,6 +4,7 @@ namespace App\Repository\Article;
 
 use App\Entity\SessionArticle;
 use App\Repository\User\AnonymUserRepository;
+use App\Service\PaginatorService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -55,8 +56,8 @@ class SessionArticleRepository extends ServiceEntityRepository
             ->setFirstResult($limit * ($page - 1)) // Offset
         ;
 
-        $paginator = new Paginator($query);
+        $paginator = new PaginatorService();
 
-        return $paginator;
+        return $paginator->getQueryBuilderPageResult($query, $page, $limit);
     }
 }
