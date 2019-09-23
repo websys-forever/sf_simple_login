@@ -5,9 +5,12 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\RegistrationFormType;
 use App\Security\UserLoginAuthenticator;
+use App\Service\User\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Guard\GuardAuthenticatorHandler;
@@ -21,7 +24,9 @@ class RegistrationController extends AbstractController
         Request $request,
         UserPasswordEncoderInterface $passwordEncoder,
         GuardAuthenticatorHandler $guardHandler,
-        UserLoginAuthenticator $authenticator
+        UserLoginAuthenticator $authenticator,
+        SessionInterface $session,
+        UserService $userService
     ): Response
     {
         $user = new User();
@@ -37,8 +42,15 @@ class RegistrationController extends AbstractController
                 )
             );
 
+            //$anonymUserId = $userService->getAnonymUserId();
+            //$user->setId($anonymUserId);
+
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager->persist($user);
+            $existSessionArticles = $userService->getExistSessionArticles();
+            dd($user, $existSessionArticles);
+            //dd($user);
+
             $entityManager->flush();
 
             return $guardHandler->authenticateUserAndHandleSuccess(

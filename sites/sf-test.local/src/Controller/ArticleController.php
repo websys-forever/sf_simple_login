@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Service\Article\NewArticleAnonymService;
 use App\Service\Article\NewArticleUserService;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,6 +23,7 @@ class ArticleController extends AbstractController
      */
     public function newArticle(
         Request $request,
+        //Response $response,
         SessionInterface $session,
         AnonymUserRepository $anonymUserRepository,
         EntityManagerInterface $entityManager
@@ -35,7 +37,13 @@ class ArticleController extends AbstractController
             $articleService = new NewArticleUserService($user, $entityManager);
         } else {
             $formTypeClass = NewArticleAnonymFormType::class;
-            $articleService = new NewArticleAnonymService($session, $anonymUserRepository, $entityManager);
+            $articleService = new NewArticleAnonymService(
+                $session,
+                $anonymUserRepository,
+                $entityManager,
+                $request,
+                new Response()
+            );
         }
 
         //if ($this->isGranted('ROLE_USER')) {

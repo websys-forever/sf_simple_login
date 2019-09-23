@@ -7,6 +7,9 @@ use App\Entity\SessionArticle;
 use App\Repository\User\AnonymUserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class NewArticleAnonymService implements NewArticleServiceInterface
@@ -23,16 +26,28 @@ class NewArticleAnonymService implements NewArticleServiceInterface
      * @var EntityManagerInterface
      */
     private $entityManager;
+    /**
+     * @var Request
+     */
+    private $request;
+    /**
+     * @var Response
+     */
+    private $response;
 
     public function __construct(
         SessionInterface $session,
         AnonymUserRepository $anonymUserRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        Request $request,
+        Response $response
     )
     {
         $this->session = $session;
         $this->anonymUserRepository = $anonymUserRepository;
         $this->entityManager = $entityManager;
+        $this->request = $request;
+        $this->response = $response;
     }
 
     public function proccessData(
@@ -60,5 +75,11 @@ class NewArticleAnonymService implements NewArticleServiceInterface
         $this->entityManager->persist($anonymUser);
         $this->entityManager->persist($article);
         $this->entityManager->flush();
+
+        if (empty($this->request->cookies->get('user'))) {
+            $this->response->headers->setCookie(Cookie::create('user', $anonymUser->getId()));
+            $this->response->sendHeaders();
+        }
+
     }
 }
