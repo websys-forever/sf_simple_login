@@ -2,11 +2,15 @@
 
 namespace App\Service\User;
 
+use App\Entity\Article;
+use App\Entity\SessionArticle;
+use App\Entity\User;
 use App\Repository\Article\SessionArticleRepository;
 use App\Repository\User\AnonymUserRepository;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class UserService
 {
@@ -14,10 +18,6 @@ class UserService
      * @var AnonymUserRepository
      */
     private $anonymUserRepository;
-    /**
-     * @var SessionInterface
-     */
-    private $session;
     /**
      * @var SessionArticleRepository
      */
@@ -30,36 +30,24 @@ class UserService
      * @var RequestStack
      */
     private $requestStack;
+    /**
+     * @var Response
+     */
+    private $response;
 
     public function __construct(
         RequestStack $requestStack,
         AnonymUserRepository $anonymUserRepository,
-        SessionInterface $session,
         SessionArticleRepository $sessionArticleRepository
     )
     {
-
         $this->anonymUserRepository = $anonymUserRepository;
-        $this->session = $session;
         $this->sessionArticleRepository = $sessionArticleRepository;
         $this->requestStack = $requestStack;
         $this->request = $requestStack->getCurrentRequest();
-
+        $this->response = new REsponse();
     }
 
-    /**
-     * @return string
-     */
-    public function getAnonymUserId()
-    {
-        $sessId = $this->session->getId();
-        $anonymUserId = $this->anonymUserRepository->findOneBy(['session_id' => $sessId]);
-
-        return $anonymUserId->getId();
-    }
-
-    /**
-     */
     public function getAnonymUser()
     {
         $anonymUserId = $this->request->cookies->get('user');
@@ -74,6 +62,37 @@ class UserService
         $sessionArticles = $this->sessionArticleRepository->findBy(['author' => $anonymUser]);
 
         return $sessionArticles;
+    }
+
+    public function bindAndPersistExistArticles(User $user, ObjectManager $entityManager)
+    {
+        $existSessionArticles = $this->getExistSessionArticles();
+
+        if (!empty($existSessionArticles)) {
+            /** @var SessionArticle $existArticle*/
+            foreach ($existSessionArticles as $existArticle) {
+                $bindArticle = new Article();
+                $bindArticle->setTitle($existArticle->getTitle());
+                $bindArticle->setContent($existArticle->getContent());
+                $bindArticle->setAuthor($user);
+                $entityManager->persist($bindArticle);
+            }
+        }
+    }
+
+    public function bindExistUserData(User $user)
+    {
+        $anonymUser = $this->getAnonymUser();
+        $existAuthorName = $anonymUser->getExistAuthorName();
+        if ($existAuthorName) {
+            $user->setAuthorName($existAuthorName);
+        }
+    }
+
+    public function removeAnonymUserCookie()
+    {
+        $this->response->headers->clearCookie('user');
+        $this->response->sendHeaders();
     }
 
 }

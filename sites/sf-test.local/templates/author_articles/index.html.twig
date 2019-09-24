@@ -41,6 +41,7 @@
                 </thead>
                 <tbody>
                 {% set i = 0 %}
+                {{ dump(articles) }}
                 {% for article in articles %}
                     {% set i = i + 1 %}
                     <tr>

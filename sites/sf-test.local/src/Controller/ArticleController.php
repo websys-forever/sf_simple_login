@@ -20,10 +20,14 @@ class ArticleController extends AbstractController
 {
     /**
      * @Route("/new-article", name="new_article")
+     * @param Request $request
+     * @param SessionInterface $session
+     * @param AnonymUserRepository $anonymUserRepository
+     * @param EntityManagerInterface $entityManager
+     * @return Response
      */
     public function newArticle(
         Request $request,
-        //Response $response,
         SessionInterface $session,
         AnonymUserRepository $anonymUserRepository,
         EntityManagerInterface $entityManager
@@ -46,23 +50,15 @@ class ArticleController extends AbstractController
             );
         }
 
-        //if ($this->isGranted('ROLE_USER')) {
-            //$form = $this->newArticleUser($request, $entityManager);
-
         $form = $this->createForm($formTypeClass);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
 
             $articleService->proccessData($form);
-
             $this->addFlash('success', 'Your article created!');
 
             return $this->redirectToRoute('home_page');
         }
-
-        //} else {
-            //$form = $this->newArticleAnonym($request, $entityManager, $session);
-        //}
 
         return $this->render('article/new.html.twig', [
             'articleForm' => $form->createView(),
