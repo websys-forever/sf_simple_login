@@ -12,7 +12,6 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\ResultSetMapping;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\Security\Core\Security;
 
 /**
@@ -32,6 +31,11 @@ class ArticleRepository extends ServiceEntityRepository
      */
     private $entityManager;
 
+    /**
+     * @param ManagerRegistry $registry
+     * @param Security $security
+     * @param EntityManagerInterface $entityManager
+     */
     public function __construct(
         ManagerRegistry $registry,
         Security $security,
@@ -44,9 +48,11 @@ class ArticleRepository extends ServiceEntityRepository
     }
 
     /**
+     * @param int $page
+     * @param int $limit
      * @return PageResult|null
      */
-    public function getUserArticles(int $page, int $limit)
+    public function getUserArticles(int $page, int $limit): ?PageResult
     {
         /** @var \App\Entity\User $user */
         $user = $this->security->getUser();
@@ -64,11 +70,15 @@ class ArticleRepository extends ServiceEntityRepository
         return $paginator->getQueryBuilderPageResult($query, $page, $limit);
     }
 
-    public function getAllAuthorsArticles($page = 1, $limit = 2)
+    /**
+     * @param int $page
+     * @param int $limit
+     * @return PageResult|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function getAllAuthorsArticles(int $page = 1, int $limit = 2): ?PageResult
     {
         $rsm = new ResultSetMapping();
-        //$rsm = new ResultSetMappingBuilder($this->entityManager);
-        //$rsm->addRootEntityFromClassMetadata(Article::class, 'a');
         $rsm->addEntityResult(Article::class, 'a');
             $rsm->addFieldResult('a', 'id', 'id');
             $rsm->addFieldResult('a', 'title', 'title');
@@ -86,7 +96,6 @@ class ArticleRepository extends ServiceEntityRepository
         $rsm->addJoinedEntityResult(AnonymUser::class, 'au', 'sa', 'author');
             $rsm->addFieldResult('au', 'author_id', 'id');
             $rsm->addFieldResult('au', 'author_name', 'author_name');
-        //$rsm->addFieldResult('s', 'author_id', 'author');
 
         $sqlSelect = 'SELECT
                         a1.id, 
@@ -121,15 +130,9 @@ class ArticleRepository extends ServiceEntityRepository
 
         $sqlWithLimit = $sqlSelect . $sqlBody . ' LIMIT :limit OFFSET :offset';
         $query = $this->entityManager->createNativeQuery($sqlWithLimit, $rsm);
-        //dd($query);
         $offset = $limit * ($page - 1);
         $query->setParameter('limit', $limit);
         $query->setParameter('offset', $offset);
-
-        //$articles = $query;//->getResult();
-
-        //dd($articles);
-        //$query = $query->getQuery();
 
         $paginator = new PaginatorService();
 

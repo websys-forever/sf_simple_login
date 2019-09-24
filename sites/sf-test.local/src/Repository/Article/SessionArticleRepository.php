@@ -3,11 +3,11 @@
 namespace App\Repository\Article;
 
 use App\Entity\SessionArticle;
+use App\Repository\DataTransferObject\PageResult;
 use App\Repository\User\AnonymUserRepository;
 use App\Service\PaginatorService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
@@ -27,6 +27,11 @@ class SessionArticleRepository extends ServiceEntityRepository
      */
     private $anonymUserRepository;
 
+    /**
+     * @param ManagerRegistry $registry
+     * @param SessionInterface $session
+     * @param AnonymUserRepository $anonymUserRepository
+     */
     public function __construct(
         ManagerRegistry $registry,
         SessionInterface $session,
@@ -38,7 +43,12 @@ class SessionArticleRepository extends ServiceEntityRepository
         $this->anonymUserRepository = $anonymUserRepository;
     }
 
-    public function getAnonymArticles($page, $limit)
+    /**
+     * @param int $page
+     * @param int $limit
+     * @return PageResult|null
+     */
+    public function getAnonymArticles(int $page, int $limit): ?PageResult
     {
         $sessionId = $this->session->getId();
         $user = $this->anonymUserRepository->findOneBy(['session_id' => $sessionId]);

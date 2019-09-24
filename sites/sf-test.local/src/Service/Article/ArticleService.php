@@ -4,7 +4,6 @@ namespace App\Service\Article;
 
 use App\Entity\Article;
 use App\Entity\User;
-use App\Form\NewArticleUserFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Form\FormInterface;
 
@@ -19,6 +18,10 @@ class ArticleService
      */
     private $user;
 
+    /**
+     * @param User $user
+     * @param EntityManagerInterface $entityManager
+     */
     public function __construct(
         User $user,
         EntityManagerInterface $entityManager
@@ -29,7 +32,7 @@ class ArticleService
     }
 
     /**
-     * @param NewArticleUserFormType $form
+     * @param FormInterface $form
      * @return void
      */
     public function proccessData(FormInterface $form)

@@ -14,7 +14,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
-
 class NewArticleAnonymFormType extends AbstractType
 {
     /**
@@ -38,7 +37,6 @@ class NewArticleAnonymFormType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-
         $sessionId = $this->session->getId();
         /** @var AnonymUser $anonymUser */
         $anonymUser = $this->anonymUserRepository->findOneBy(['session_id' => $sessionId]);

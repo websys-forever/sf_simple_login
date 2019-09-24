@@ -2,8 +2,6 @@
 
 namespace App\Repository\DataTransferObject;
 
-use Doctrine\ORM\QueryBuilder;
-
 class PageResult
 {
     private $elements;

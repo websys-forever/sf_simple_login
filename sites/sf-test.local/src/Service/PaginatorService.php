@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use App\Repository\DataTransferObject\PageResult;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\NativeQuery;
 use Doctrine\ORM\Query\ResultSetMapping;
@@ -21,9 +20,12 @@ class PaginatorService
      * @param QueryBuilder $query
      * @param int $thisPage
      * @param int $limit
-     * @return PageResult
+     * @return PageResult|null
      */
-    public function getQueryBuilderPageResult(QueryBuilder $query, int $thisPage, int $limit): ?PageResult
+    public function getQueryBuilderPageResult(
+        QueryBuilder $query,
+        int $thisPage,
+        int $limit): ?PageResult
     {
         $paginator = new Paginator($query);
         $maxPages = ceil($paginator->count() / $limit);
@@ -37,6 +39,15 @@ class PaginatorService
         return $pageResult;
     }
 
+    /**
+     * @param EntityManagerInterface $entityManager
+     * @param NativeQuery $query
+     * @param string $sqlBody
+     * @param int $thisPage
+     * @param int $limit
+     * @return PageResult|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function getNativeSQLPageResult(
         EntityManagerInterface $entityManager,
         NativeQuery $query,
@@ -52,7 +63,6 @@ class PaginatorService
         $sql = $sqlSelect . $sqlBody;
         $countQuery = $entityManager->createNativeQuery($sql, $rsm);
         $countResult = $countQuery->getSingleScalarResult();
-        //dd($sql);
         $maxPages = ceil($countResult / $limit);
         $pageResult = new PageResult(
             $elements,

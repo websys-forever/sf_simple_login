@@ -2,6 +2,7 @@
 
 namespace App\Service\User;
 
+use App\Entity\AnonymUser;
 use App\Entity\Article;
 use App\Entity\SessionArticle;
 use App\Entity\User;
@@ -35,6 +36,12 @@ class UserService
      */
     private $response;
 
+    /**
+     * @param RequestStack $requestStack
+     * @param AnonymUserRepository $anonymUserRepository
+     * @param SessionArticleRepository $sessionArticleRepository
+     * @return void
+     */
     public function __construct(
         RequestStack $requestStack,
         AnonymUserRepository $anonymUserRepository,
@@ -48,7 +55,10 @@ class UserService
         $this->response = new REsponse();
     }
 
-    public function getAnonymUser()
+    /**
+     * @return AnonymUser
+     */
+    public function getAnonymUser(): ?AnonymUser
     {
         $anonymUserId = $this->request->cookies->get('user');
         $anonymUser = $this->anonymUserRepository->findOneBy(['id' => $anonymUserId]);
@@ -56,7 +66,11 @@ class UserService
         return $anonymUser;
     }
 
-    public function getExistSessionArticles()
+
+    /**
+     * @return SessionArticle[]
+     */
+    public function getExistSessionArticles(): ?array
     {
         $anonymUser = $this->getAnonymUser();
         $sessionArticles = $this->sessionArticleRepository->findBy(['author' => $anonymUser]);
@@ -64,6 +78,11 @@ class UserService
         return $sessionArticles;
     }
 
+    /**
+     * @param User $user
+     * @param ObjectManager $entityManager
+     * @return void
+     */
     public function bindAndPersistExistArticles(User $user, ObjectManager $entityManager)
     {
         $existSessionArticles = $this->getExistSessionArticles();
@@ -80,6 +99,10 @@ class UserService
         }
     }
 
+    /**
+     * @param User $user
+     * @return void
+     */
     public function bindExistUserData(User $user)
     {
         $anonymUser = $this->getAnonymUser();
@@ -89,6 +112,9 @@ class UserService
         }
     }
 
+    /**
+     * @return void
+     */
     public function removeAnonymUserCookie()
     {
         $this->response->headers->clearCookie('user');

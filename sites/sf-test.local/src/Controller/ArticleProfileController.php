@@ -8,12 +8,17 @@ use App\Repository\Article\SessionArticleRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class ArticleProfileController extends AbstractController
 {
     /**
      * @Route("/my", name="author_articles")
+     * @param Request $request
+     * @param ArticleRepository $articleRepository
+     * @param SessionArticleRepository $sessionArticleRepository
+     * @return Response
      */
     public function authorArticles(
         Request $request,
@@ -40,6 +45,10 @@ class ArticleProfileController extends AbstractController
 
     /**
      * @Route("/my/article/remove/{id}", name="remove_article")
+     * @param Request $request
+     * @param ArticleRepository $articleRepository
+     * @param EntityManagerInterface $entityManager
+     * @return Response
      */
     public function removeArticle(
         Request $request,
@@ -73,6 +82,10 @@ class ArticleProfileController extends AbstractController
 
     /**
      * @Route("/my/article/edit/{id}", name="edit_article")
+     * @param Request $request
+     * @param ArticleRepository $articleRepository
+     * @param EntityManagerInterface $entityManager
+     * @return Response
      */
     public function editArticle(
         Request $request,

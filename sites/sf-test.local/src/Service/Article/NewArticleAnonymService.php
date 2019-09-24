@@ -35,6 +35,14 @@ class NewArticleAnonymService implements NewArticleServiceInterface
      */
     private $response;
 
+    /**
+     * @param SessionInterface $session
+     * @param AnonymUserRepository $anonymUserRepository
+     * @param EntityManagerInterface $entityManager
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function __construct(
         SessionInterface $session,
         AnonymUserRepository $anonymUserRepository,
