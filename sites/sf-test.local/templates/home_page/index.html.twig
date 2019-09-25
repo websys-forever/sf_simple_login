@@ -5,20 +5,39 @@
 {% block body %}
 <div class="container">
     <div class="row">
-        {% if articles|length > 0 %}
-                {% for article in articles %}
-                    <div class="article-item col-lg-3">
-                        <div>Title: <a href="{{ path('show_article',{'id': article.id}) }}">
-                            {{ article.title }}
-                            </a>
-                        </div>
-                        <div>Content: {{ article.content }}</div>
-                        <div>Author: {{ article.author.author_name }}</div>
-                        <div>Created at: {{ article.created_at|date('Y-m-d') }}</div>
+        <div class="container">
+            <div class="row justify-content-center">
+                <nav>
+                    <ul class="nav">
+                        <li class="nav-item btn btn-light">
+                            <a class="nav-link" href="{{ path('new_article') }}">Add an article</a>
+                        </li>
+                        <li class="nav-item btn btn-light">
+                            <a class="nav-link" href="{{ (app.user is empty) ? '/login' : '/logout' }}">{{ (app.user is empty) ? 'Log In' : 'Log out' }}</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row justify-content-center">
+            {% if articles|length > 0 %}
+                    {% for article in articles %}
+                        {{ dump(article) }}
+                        <div class="article-item col-lg-4 bg-light">
+                            <div>Title: <a href="{{ path('show_article',{'articleId': article.id}) }}">
+                                {{ article.title }}
+                                </a>
+                            </div>
+                            <div>Content: {{ article.content }}</div>
+                            <div>Author: {{ article.author.author_name }}</div>
+                            <div>Created at: {{ article.created_at|date('d-m-Y') }}</div>
 
-                    </div>
-                {% endfor %}
-        {% endif %}
+                        </div>
+                    {% endfor %}
+            {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 

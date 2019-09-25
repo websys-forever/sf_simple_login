@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Form\NewArticleUserFormType;
 use App\Form\NewArticleAnonymFormType;
 use App\Repository\Article\ArticleRepository;
+use App\Repository\Article\SessionArticleRepository;
 use App\Repository\User\AnonymUserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\Article\NewArticleAnonymService;
@@ -64,14 +65,25 @@ class ArticleController extends AbstractController
     }
 
     /**
-     * @Route("/article/{id}", name="show_article")
+     * @Route("/article/{articleId}", name="show_article")
+     * @param string $articleId
      * @param ArticleRepository $articleRepository
+     * @param SessionArticleRepository $sessionArticleRepository
      * @param Request $request
      * @return Response
      */
-    public function showArticle(ArticleRepository $articleRepository, Request $request)
+    public function showArticle(string $articleId, ArticleRepository $articleRepository, SessionArticleRepository $sessionArticleRepository, Request $request)
     {
-        // TODO create article page
-       return new Response($request->get('id'));
+        $articleId = (string) $articleId;
+
+            $article = $articleRepository->findOneBy(['id' => $articleId]);
+        if (!$article) {
+            $article = $sessionArticleRepository->findOneBy(['id' => $articleId]);
+        }
+        //dd($articleId, $article);
+        return $this->render('article.article.html.twig', [
+            'articleId' => $articleId,
+            'article' => $article,
+        ]);
     }
 }

@@ -1,0 +1,21 @@
+.container {
+    margin-bottom: 15px;
+}
+.wrapper {
+    width: 960px;
+}
+.article-item {
+    max-width: 29%;
+    padding: 1%;
+    margin: 1%;
+    border: 2px solid #ccc;
+}
+.nav-item {
+    margin: 5px;
+}
+.article-item {
+    border-radius: 10px;
+}
+.manage-btn {
+    margin-right: 15px;
+}

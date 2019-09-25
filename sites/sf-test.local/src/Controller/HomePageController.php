@@ -17,6 +17,7 @@ class HomePageController extends AbstractController
      * @param SessionInterface $session
      * @param ArticleRepository $articleRepository
      * @return Response
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function index(
         Request $request,
