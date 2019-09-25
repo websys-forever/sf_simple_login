@@ -70,19 +70,17 @@ class ArticleController extends AbstractController
      * @param ArticleRepository $articleRepository
      * @param SessionArticleRepository $sessionArticleRepository
      * @param Request $request
+     * @throws
      * @return Response
      */
     public function showArticle(string $articleId, ArticleRepository $articleRepository, SessionArticleRepository $sessionArticleRepository, Request $request)
     {
-        $articleId = (string) $articleId;
-
-            $article = $articleRepository->findOneBy(['id' => $articleId]);
-        if (!$article) {
-            $article = $sessionArticleRepository->findOneBy(['id' => $articleId]);
+        $article = $articleRepository->findArticle($articleId);
+        if (empty($article)) {
+            $article = $sessionArticleRepository->findArticle($articleId);
         }
-        //dd($articleId, $article);
-        return $this->render('article.article.html.twig', [
-            'articleId' => $articleId,
+//dd($article);
+        return $this->render('article/article.html.twig', [
             'article' => $article,
         ]);
     }

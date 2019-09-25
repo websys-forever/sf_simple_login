@@ -27,7 +27,7 @@ class ArticleProfileController extends AbstractController
     )
     {
         $page = $request->get('page') ?: 1 ;
-        $limit = $request->get('limit') ?: 2 ;
+        $limit = $request->get('limit') ?: 30 ;
 
         if ($this->isGranted('ROLE_USER')) {
             $result = $articleRepository->getUserArticles($page, $limit);

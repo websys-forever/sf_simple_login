@@ -2,6 +2,7 @@
 
 namespace App\Repository\Article;
 
+use App\Entity\AnonymUser;
 use App\Entity\SessionArticle;
 use App\Repository\DataTransferObject\PageResult;
 use App\Repository\User\AnonymUserRepository;
@@ -58,10 +59,10 @@ class SessionArticleRepository extends ServiceEntityRepository
             $userId = $user->getId();
         }
 
-        $query = $this->createQueryBuilder('a')
-            ->andWhere('a.author = :userId')
+        $query = $this->createQueryBuilder('sa')
+            ->andWhere('sa.author = :userId')
             ->setParameter('userId', $userId)
-            ->orderBy('a.created_at', 'DESC')
+            ->orderBy('sa.created_at', 'DESC')
             ->setMaxResults($limit)
             ->setFirstResult($limit * ($page - 1)) // Offset
         ;
@@ -69,5 +70,27 @@ class SessionArticleRepository extends ServiceEntityRepository
         $paginator = new PaginatorService();
 
         return $paginator->getQueryBuilderPageResult($query, $page, $limit);
+    }
+
+    /**
+     * @param string $articleId
+     * @return array|null
+     */
+    public function findArticle(string $articleId): ?array
+    {
+        $query = $this->createQueryBuilder('a')
+            ->select('
+            a.id, 
+            a.title, 
+            a.content, 
+            a.created_at, 
+            u.id AS author_id,
+            u.author_name'
+            )->innerJoin(AnonymUser::class, 'u', 'WITH', 'u.id = a.author')
+            ->andWhere('a.id = :articleId')
+            ->setParameter('articleId', $articleId);
+
+        $result = $query->getQuery()->getArrayResult();
+        return $result ? $result[0] : [] ;
     }
 }

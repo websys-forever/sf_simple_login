@@ -14,19 +14,18 @@ class HomePageController extends AbstractController
     /**
      * @Route("/", name="home_page")
      * @param Request $request
-     * @param SessionInterface $session
      * @param ArticleRepository $articleRepository
      * @return Response
      * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function index(
         Request $request,
-        SessionInterface $session,
         ArticleRepository $articleRepository
     )
     {
         $page = (int) ($request->get('page') ?: 1 );
-        $limit = (int) ($request->get('limit') ?: 2 );
+        $limit = (int) ($request->get('limit') ?: 30 );
         $result = $articleRepository->getAllAuthorsArticles($page, $limit);
 
         return $this->render('home_page/index.html.twig', [

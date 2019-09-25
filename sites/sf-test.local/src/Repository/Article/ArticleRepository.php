@@ -2,16 +2,13 @@
 
 namespace App\Repository\Article;
 
-use App\Entity\AnonymUser;
 use App\Entity\Article;
-use App\Entity\SessionArticle;
 use App\Entity\User;
 use App\Repository\DataTransferObject\PageResult;
 use App\Service\PaginatorService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Query\ResultSetMapping;
 use Symfony\Component\Security\Core\Security;
 
 /**
@@ -71,31 +68,38 @@ class ArticleRepository extends ServiceEntityRepository
     }
 
     /**
+     * @param string $articleId
+     * @return array|null
+     */
+    public function findArticle(string $articleId): ?array
+    {
+        $query = $this->createQueryBuilder('a')
+            ->select('
+            a.id, 
+            a.title, 
+            a.content, 
+            a.created_at, 
+            u.id AS author_id,
+            u.author_name'
+            )->innerJoin(User::class, 'u', 'WITH', 'u.id = a.author')
+            ->andWhere('a.id = :articleId')
+            ->setParameter('articleId', $articleId);
+
+        $result = $query->getQuery()->getArrayResult();
+        return $result ? $result[0] : [] ;
+    }
+
+    /**
      * @param int $page
      * @param int $limit
      * @return PageResult|null
      * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\DBAL\DBALException
      */
-    public function getAllAuthorsArticles(int $page = 1, int $limit = 2): ?PageResult
+    public function getAllAuthorsArticles(int $page = 1, int $limit = 30): ?PageResult
     {
-        $rsm = new ResultSetMapping();
-        $rsm->addEntityResult(Article::class, 'a');
-            $rsm->addFieldResult('a', 'id', 'id');
-            $rsm->addFieldResult('a', 'title', 'title');
-            $rsm->addFieldResult('a', 'content', 'content');
-            $rsm->addFieldResult('a', 'created_at', 'created_at');
-        $rsm->addJoinedEntityResult(User::class, 'u', 'a', 'author');
-        //$rsm->addFieldResult('a', 'author_id', 'author');
-            $rsm->addFieldResult('u', 'author_id', 'id');
-            $rsm->addFieldResult('u', 'author_name', 'author_name');
-        $rsm->addEntityResult(SessionArticle::class, 'sa');
-            $rsm->addFieldResult('sa', 'id', 'id');
-            $rsm->addFieldResult('sa', 'title', 'title');
-            $rsm->addFieldResult('sa', 'content', 'content');
-            $rsm->addFieldResult('sa', 'created_at', 'created_at');
-        $rsm->addJoinedEntityResult(AnonymUser::class, 'au', 'sa', 'author');
-            $rsm->addFieldResult('au', 'author_id', 'id');
-            $rsm->addFieldResult('au', 'author_name', 'author_name');
+        /** @var \Doctrine\DBAL\Connection $conn */
+        $conn = $this->getEntityManager()->getConnection();
 
         $sqlSelect = 'SELECT
                         a1.id, 
@@ -126,83 +130,25 @@ class ArticleRepository extends ServiceEntityRepository
                     au.author_name
                   FROM session_article AS sa 
                     JOIN anonym_user AS au ON au.id = sa.author_id
-                  ) AS a1';
-
+                  ) AS a1
+                  ORDER BY a1.created_at DESC
+                  ';
         $sqlWithLimit = $sqlSelect . $sqlBody . ' LIMIT :limit OFFSET :offset';
-        $query = $this->entityManager->createNativeQuery($sqlWithLimit, $rsm);
         $offset = $limit * ($page - 1);
-        $query->setParameter('limit', $limit);
-        $query->setParameter('offset', $offset);
+        $stmt = $conn->prepare($sqlWithLimit);
+        $stmt->bindParam(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->execute();
 
+        $pageResult = $stmt->fetchAll();
         $paginator = new PaginatorService();
 
-        return $paginator->getNativeSQLPageResult(
+        return $paginator->getSQLPageResult(
             $this->entityManager,
-            $query,
+            $pageResult,
             $sqlBody,
             $page,
             $limit
         );
-    }
-
-
-    /**
-     * @param string $articleId
-     * @return PageResult|null
-     */
-    public function getArticle(string $articleId): ?PageResult
-    {
-        $rsm = new ResultSetMapping();
-        $rsm->addEntityResult(Article::class, 'a');
-        $rsm->addFieldResult('a', 'id', 'id');
-        $rsm->addFieldResult('a', 'title', 'title');
-        $rsm->addFieldResult('a', 'content', 'content');
-        $rsm->addFieldResult('a', 'created_at', 'created_at');
-        $rsm->addJoinedEntityResult(User::class, 'u', 'a', 'author');
-        //$rsm->addFieldResult('a', 'author_id', 'author');
-        $rsm->addFieldResult('u', 'author_id', 'id');
-        $rsm->addFieldResult('u', 'author_name', 'author_name');
-        $rsm->addEntityResult(SessionArticle::class, 'sa');
-        $rsm->addFieldResult('sa', 'id', 'id');
-        $rsm->addFieldResult('sa', 'title', 'title');
-        $rsm->addFieldResult('sa', 'content', 'content');
-        $rsm->addFieldResult('sa', 'created_at', 'created_at');
-        $rsm->addJoinedEntityResult(AnonymUser::class, 'au', 'sa', 'author');
-        $rsm->addFieldResult('au', 'author_id', 'id');
-        $rsm->addFieldResult('au', 'author_name', 'author_name');
-
-        $sql = '
-              SELECT 
-                a.id, 
-                a.title, 
-                a.content,
-                a.created_at,
-                a.author_id,
-                u.author_name
-              FROM article AS a
-              UNION ALL 
-              SELECT
-                sa.id, 
-                sa.title, 
-                sa.content,
-                sa.created_at,
-                sa.author_id,
-                au.author_name
-              FROM session_article AS sa 
-              WHERE a.id = :articleId OR sa.id = :articleId
-              LIMIT 1';
-
-        $query = $this->entityManager->createNativeQuery($sql, $rsm);
-        $query->setParameter('articleId', $articleId);
-
-        $paginator = new PaginatorService();
-
-/*        return $paginator->getNativeSQLPageResult(
-            $this->entityManager,
-            $query,
-            $sqlBody,
-            $page,
-            $limit
-        );*/
     }
 }

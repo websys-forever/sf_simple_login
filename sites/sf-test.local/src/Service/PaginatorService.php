@@ -41,22 +41,22 @@ class PaginatorService
 
     /**
      * @param EntityManagerInterface $entityManager
-     * @param NativeQuery $query
+     * @param array $pageResult
      * @param string $sqlBody
      * @param int $thisPage
      * @param int $limit
      * @return PageResult|null
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function getNativeSQLPageResult(
+    public function getSQLPageResult(
         EntityManagerInterface $entityManager,
-        NativeQuery $query,
+        array $pageResult,
         string $sqlBody,
         int $thisPage,
         int $limit
     ): ?PageResult
     {
-        $elements = $query->getArrayResult() ?: NULL;
+        $elements = $pageResult ?: NULL;
         $sqlSelect = 'SELECT COUNT(*) AS count ';
         $rsm = new ResultSetMapping();
         $rsm->addScalarResult('count', 'count', 'integer');
@@ -64,6 +64,7 @@ class PaginatorService
         $countQuery = $entityManager->createNativeQuery($sql, $rsm);
         $countResult = $countQuery->getSingleScalarResult();
         $maxPages = ceil($countResult / $limit);
+
         $pageResult = new PageResult(
             $elements,
             $maxPages,
