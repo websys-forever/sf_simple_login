@@ -79,7 +79,7 @@ class ArticleController extends AbstractController
         if (empty($article)) {
             $article = $sessionArticleRepository->findArticle($articleId);
         }
-//dd($article);
+
         return $this->render('article/article.html.twig', [
             'article' => $article,
         ]);
